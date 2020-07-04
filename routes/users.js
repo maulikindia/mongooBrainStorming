@@ -76,10 +76,22 @@ router.delete('/', async (req, res) => {
 
       return res.json({ status: true, msg: 'deleted all users', data: [] });
     }
-  }).sort({ name: -1 });
-
-
+  });
 });
+
+router.put('/', async (req, res) => {
+  let bodyData = req.body;
+  await user.findOneAndUpdate({ _id: bodyData._id }, bodyData, { new: true }, async (err, respo) => {
+    if (err) {
+      return res.json({ status: false, msg: err, data: [] });
+    }
+    else if (respo !== null) {
+      return res.json({ status: true, msg: '', data: respo });
+    }
+  });
+});
+
+
 
 
 async function encryptPass(arr) {
