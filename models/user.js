@@ -51,13 +51,13 @@ uSchema.post('find', function (doc) {
 //     return data;
 // };
 
-
+//before findOneAndUpdate it will call.
 uSchema.pre('findOneAndUpdate', function (next) {
     console.log('call before findone and update method');
     next();
 });
 
-
+//adter findOneAndUpdate it  will call.
 uSchema.post('findOneAndUpdate', function (doc) {
 
     console.log('call after findone and update method');
@@ -66,6 +66,12 @@ uSchema.post('findOneAndUpdate', function (doc) {
 
 });
 
+
+//after remove method this remove middleware will call.
+uSchema.post('findOneAndDelete', function (doc) {
+    console.log('remove user id\t', doc._id);
+
+});
 
 
 module.exports = mongoose.model('users', uSchema);

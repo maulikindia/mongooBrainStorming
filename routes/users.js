@@ -91,6 +91,18 @@ router.put('/', async (req, res) => {
   });
 });
 
+router.post('/re', async (req, res) => {
+  await user.findOneAndDelete({ name: 'maulik bhalala' }, async (err, respo) => {
+    if (err) {
+      return res.json({ status: false, msg: err, data: [] });
+    }
+    else {
+      return res.json({ status: true, msg: 'Removed ', data: [] });
+    }
+
+  })
+
+});
 
 
 
