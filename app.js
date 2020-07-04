@@ -38,4 +38,11 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
+let port = 6688;
+app.listen(port, async (err) => {
+  if (!err) {
+    return console.log('server is listening on port ' + `${port}`);
+  }
+});
+
 module.exports = app;
