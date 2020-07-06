@@ -262,7 +262,6 @@ router.get('/empSal', async (req, res) => {
   //q=0 for populate and q=1 for aggregation
 
   if (q === 0 || q === '0') {
-    console.log('in populate')
     await emp.findOne(mQ, async (err, respo) => {
       if (err) {
         return res.json({ status: false, msg: err, data: [] });
@@ -274,12 +273,11 @@ router.get('/empSal', async (req, res) => {
         return res.json({ status: true, msg: ',', data: respo });
       }
 
-    }).populate({ path: 'salary' });
+    }).populate('salary', 'amount');
 
   }
   else if (q === 1 || q === '1') {
 
-    console.log('in aggregation.')
     let aggre = [];
 
     aggre = [
@@ -358,7 +356,7 @@ router.get('/salById', async (req, res) => {
         return res.json({ status: true, msg: ',', data: newArr });
       }
 
-    }).populate({ path: 'salary' });
+    }).populate('salary', 'amount');
 
   }
   else if (q === 1 || q === '1') {
