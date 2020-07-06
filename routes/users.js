@@ -126,6 +126,7 @@ async function encryptPass(arr) {
   return arr;
 }
 
+//get users by aggregation
 router.get('/agg', async (req, res) => {
 
   let agg = [];
@@ -161,7 +162,7 @@ router.get('/agg', async (req, res) => {
 
 let sal = require('../models/salary');
 
-
+//post multiple salaries
 router.post('/sal', async (req, res) => {
 
   let bodyData = req.body;
@@ -185,6 +186,8 @@ router.post('/sal', async (req, res) => {
   });
 });
 
+
+//get top salaries by aggregation
 router.get('/salAgg', async (req, res) => {
 
 
@@ -216,9 +219,190 @@ router.get('/salAgg', async (req, res) => {
       return res.json({ status: true, msg: ',', data: respo });
     }
   });
+});
 
+//get all salaries
+router.get('/getSal', async (req, res) => {
+  await sal.find({}, async (err, respo) => {
+    if (err) {
+      return res.json({ status: false, msg: err, data: [] });
+    }
+    else if (respo !== null) {
+      return res.json({ status: true, msg: ',', data: respo });
+    }
+
+  });
 
 });
+
+
+let emp = require('../models/employee');
+
+//add employee
+router.post('/emp', async (req, res) => {
+  let bodyData = req.body;
+  await emp.create(bodyData, async (err, respo) => {
+    if (err) {
+      return res.json({ status: false, msg: err, data: [] });
+    }
+    else if (respo !== null) {
+      return res.json({ status: true, msg: ',', data: respo });
+    }
+
+  });
+});
+
+
+
+//get specific employee with their salary  using populate and aggregation
+
+router.get('/empSal', async (req, res) => {
+  let mQ = { 'empName': req.query.name };
+  let q = req.query.isAgg;
+  //q=0 for populate and q=1 for aggregation
+
+  if (q === 0 || q === '0') {
+    console.log('in populate')
+    await emp.findOne(mQ, async (err, respo) => {
+      if (err) {
+        return res.json({ status: false, msg: err, data: [] });
+      }
+      else if (respo !== null) {
+        respo = JSON.parse(JSON.stringify(respo));
+        respo.amount = respo.salary.amount;
+        delete respo.salary;
+        return res.json({ status: true, msg: ',', data: respo });
+      }
+
+    }).populate({ path: 'salary' });
+
+  }
+  else if (q === 1 || q === '1') {
+
+    console.log('in aggregation.')
+    let aggre = [];
+
+    aggre = [
+      {
+        $match: mQ
+      },
+      {
+        $lookup:
+        {
+
+          localField: 'salary',
+          foreignField: '_id',
+          from: 'salaries',
+          as: 'empArray'
+        }
+      },
+      // {
+      //   $project:
+      //   {
+      //     empArray: { amount: 1 }
+      //   }
+      // }
+    ];
+
+
+    await emp.aggregate(aggre, async (err, respo) => {
+
+      if (err) {
+        return res.json({ status: false, msg: err, data: [] });
+      }
+      else if (respo !== null) {
+        respo = JSON.parse(JSON.stringify(respo));
+        let newArr = []
+        for await (let mRespo of respo) {
+          let amount;
+          for await (let mSal of mRespo.empArray) {
+            amount = mSal.amount;
+          }
+
+          delete mRespo.salary;
+          delete mRespo.empArray;
+          mRespo.amount = amount;
+          newArr.push(mRespo)
+        }
+        return res.json({ status: true, msg: ',', data: newArr });
+      }
+    })
+
+  }
+
+});
+
+
+//get specific employees  with their salaries  using populate and aggregation
+
+router.get('/salById', async (req, res) => {
+  let mongoose = require('mongoose');
+  let mQ = { 'salary': mongoose.Types.ObjectId(req.query.id) };
+  let q = req.query.isAgg;
+
+  //q=0 for populate and q=1 for aggregation
+  if (q === 0 || q === '0') {
+    await emp.find(mQ, async (err, respo) => {
+      if (err) {
+        return res.json({ status: false, msg: err, data: [] });
+      }
+      else if (respo !== null) {
+        respo = JSON.parse(JSON.stringify(respo));
+        let newArr = [];
+        for await (let mRespo of respo) {
+
+          mRespo.amount = mRespo.salary.amount;
+          delete mRespo.salary;
+          newArr.push(mRespo);
+        }
+        return res.json({ status: true, msg: ',', data: newArr });
+      }
+
+    }).populate({ path: 'salary' });
+
+  }
+  else if (q === 1 || q === '1') {
+    let aggre = [];
+    aggre = [
+      {
+        $match: mQ
+      },
+      {
+        $lookup:
+        {
+
+          localField: 'salary',
+          foreignField: '_id',
+          from: 'salaries',
+          as: 'empArray'
+        }
+      },
+    ];
+
+    await emp.aggregate(aggre, async (err, respo) => {
+      if (err) {
+        return res.json({ status: false, msg: err, data: [] });
+      }
+      else if (respo !== null) {
+        respo = JSON.parse(JSON.stringify(respo));
+        let newArr = []
+        for await (let mRespo of respo) {
+          let amount;
+          for await (let mSal of mRespo.empArray) {
+            amount = mSal.amount;
+          }
+
+          delete mRespo.salary;
+          delete mRespo.empArray;
+          mRespo.amount = amount;
+          newArr.push(mRespo);
+        }
+        return res.json({ status: true, msg: ',', data: newArr });
+      }
+    });
+  }
+});
+
 
 
 module.exports = router;
