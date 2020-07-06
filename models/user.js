@@ -74,4 +74,15 @@ uSchema.post('findOneAndDelete', function (doc) {
 });
 
 
+
 module.exports = mongoose.model('users', uSchema);
+
+
+// uSchema.pre('validate', function (next) {
+//     let user = this;
+
+//     if (typeof (user.name) === 'string' && typeof (user.name) === 'string') {
+//         console.log('valid');
+//     }
+//     next();
+// });

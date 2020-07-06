@@ -126,4 +126,99 @@ async function encryptPass(arr) {
   return arr;
 }
 
+router.get('/agg', async (req, res) => {
+
+  let agg = [];
+  agg = [
+    {
+      $group:
+      {
+        _id: "$email"
+      }
+    },
+    {
+      $project:
+      {
+        _id: 1,
+      }
+    }
+
+  ];
+
+
+  await user.aggregate(agg, async (err, respo) => {
+
+    if (err) {
+      return res.json({ status: false, msg: err, data: [] });
+    }
+    else if (respo !== null) {
+      return res.json({ status: false, msg: '', data: respo });
+    }
+
+  });
+
+});
+
+let sal = require('../models/salary');
+
+
+router.post('/sal', async (req, res) => {
+
+  let bodyData = req.body;
+
+
+  let salArray = [];
+
+  for (let i = 1000; i < 2000; i++) {
+    let myObj = {};
+    myObj.amount = (bodyData.amount) + i;
+    salArray.push(myObj);
+  }
+
+  await sal.insertMany(salArray, async (err, respo) => {
+    if (err) {
+      return res.json({ status: false, msg: err, data: [] });
+    }
+    else {
+      return res.json({ status: true, msg: 'Salary added', data: [] });
+    }
+  });
+});
+
+router.get('/salAgg', async (req, res) => {
+
+
+  let aggre = [];
+  aggre = [
+    {
+      $group:
+      {
+        _id: "$amount",
+        maxSalary: { $max: "$amount" } // top 5 max salary , we can use $avg ,$min for other things also.
+      }
+    },
+    {
+      $project:
+      {
+        maxSalary: 1 //projecting
+      }
+    },
+    { $sort: { maxSalary: -1 } }, //sort by ascending
+    { $limit: 5 } //give 5 records
+  ];
+
+
+  await sal.aggregate(aggre, async (err, respo) => {
+    if (err) {
+      return res.json({ status: false, msg: err, data: [] });
+    }
+    else if (respo !== null) {
+      return res.json({ status: true, msg: ',', data: respo });
+    }
+  });
+
+
+});
+
+
 module.exports = router;
